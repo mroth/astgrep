@@ -12,7 +12,9 @@ import (
 )
 
 var (
-	pattern = flag.String("pattern", ".*", "pattern to search for")
+	strPattern = flag.String("string", ".*", "find string literals containing `pattern`")
+	// commentPattern = flag.String("comment", "", "find comments containing `pattern`")
+	// varPattern     = flag.String("var", "", "find variables containing `pattern`")
 )
 
 func usage() {
@@ -31,7 +33,7 @@ func main() {
 	}
 
 	// compile user-provided pattern
-	re, err := regexp.Compile(*pattern)
+	re, err := regexp.Compile(*strPattern)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -58,28 +60,7 @@ func parseFile(fset *token.FileSet, path string, re *regexp.Regexp) ([]*ast.Basi
 	if err != nil {
 		return nil, err
 	}
-	v := visitor{re: re}
+	v := strPatternVisitor{re: re}
 	ast.Walk(&v, f)
 	return v.matches, nil
-}
-
-// visitor is an ast.Visitor that collects any ast.BasicLit node matching
-// pattern re.
-type visitor struct {
-	re      *regexp.Regexp
-	matches []*ast.BasicLit // all will be of kind token.STRING
-}
-
-func (v *visitor) Visit(n ast.Node) ast.Visitor {
-	if _, ok := n.(*ast.ImportSpec); ok {
-		return nil
-	}
-
-	if bl, ok := n.(*ast.BasicLit); ok && bl.Kind == token.STRING {
-		if v.re.MatchString(bl.Value) {
-			v.matches = append(v.matches, bl)
-		}
-	}
-
-	return v
 }
