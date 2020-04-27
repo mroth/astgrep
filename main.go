@@ -22,45 +22,62 @@ func usage() {
 }
 
 func main() {
+	// parse CLI args
 	flag.Usage = usage
 	flag.Parse()
-	if len(flag.Args()) == 0 {
+	files := flag.Args()
+	if len(files) < 1 {
 		flag.Usage()
 	}
 
+	// compile user-provided pattern
 	re, err := regexp.Compile(*pattern)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	files := flag.Args()
 	fset := token.NewFileSet()
+	var results []*ast.BasicLit
 	for _, fp := range files {
-		f, err := parser.ParseFile(fset, fp, nil, 0)
+		matches, err := parseFile(fset, fp, re)
 		if err != nil {
 			log.Println(err)
-			continue
+		} else {
+			results = append(results, matches...)
 		}
-		v := visitor{fset: fset, re: re}
-		ast.Walk(v, f)
+	}
+
+	for _, m := range results {
+		position := fset.Position(m.Pos())
+		fmt.Printf("%v\t%v\n", position, m.Value)
 	}
 }
 
-type visitor struct {
-	fset *token.FileSet
-	re   *regexp.Regexp
+func parseFile(fset *token.FileSet, path string, re *regexp.Regexp) ([]*ast.BasicLit, error) {
+	f, err := parser.ParseFile(fset, path, nil, 0)
+	if err != nil {
+		return nil, err
+	}
+	v := visitor{re: re}
+	ast.Walk(&v, f)
+	return v.matches, nil
 }
 
-func (v visitor) Visit(n ast.Node) ast.Visitor {
-	// do not parse import specifications
+// visitor is an ast.Visitor that collects any ast.BasicLit node matching
+// pattern re.
+type visitor struct {
+	re      *regexp.Regexp
+	matches []*ast.BasicLit // all will be of kind token.STRING
+}
+
+func (v *visitor) Visit(n ast.Node) ast.Visitor {
 	if _, ok := n.(*ast.ImportSpec); ok {
 		return nil
 	}
 
 	if bl, ok := n.(*ast.BasicLit); ok && bl.Kind == token.STRING {
-		position := v.fset.Position(bl.Pos())
 		if v.re.MatchString(bl.Value) {
-			fmt.Printf("%v\t%v\n", position, bl.Value)
+			v.matches = append(v.matches, bl)
 		}
 	}
 
