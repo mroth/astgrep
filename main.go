@@ -9,12 +9,15 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"runtime"
+	"sync"
 )
 
 var (
 	strPattern = flag.String("string", ".*", "find string literals containing `pattern`")
 	// commentPattern = flag.String("comment", "", "find comments containing `pattern`")
 	// varPattern     = flag.String("var", "", "find variables containing `pattern`")
+	numWorkers = flag.Int("workers", runtime.NumCPU(), "number of search threads")
 )
 
 func usage() {
@@ -39,28 +42,47 @@ func main() {
 	}
 
 	fset := token.NewFileSet()
-	var results []*ast.BasicLit
-	for _, fp := range files {
-		matches, err := parseFile(fset, fp, re)
-		if err != nil {
-			log.Println(err)
-		} else {
-			results = append(results, matches...)
+	// parseErrs := make(chan error) dont want to block on error reading
+	parsedFiles := make(chan *ast.File)
+	go func() {
+		defer close(parsedFiles)
+		for _, fp := range files {
+			f, err := parser.ParseFile(fset, fp, nil, 0)
+			if err != nil {
+				log.Println(err)
+			} else {
+				parsedFiles <- f
+			}
+		}
+	}()
+
+	// TODO while excess workers...
+
+	// str scanner workers
+	var wg sync.WaitGroup
+	resC := make(chan []*ast.BasicLit)
+	for i := 0; i < *numWorkers; i++ {
+		wg.Add(1)
+		go func() {
+			v := strPatternVisitor{re: re}
+			for f := range parsedFiles {
+				v.matches = nil // realloc slice to reset
+				ast.Walk(&v, f)
+				resC <- v.matches
+			}
+			wg.Done()
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(resC)
+	}()
+
+	for r := range resC {
+		for _, m := range r {
+			position := fset.Position(m.Pos())
+			fmt.Printf("%v\t%v\n", position, m.Value)
 		}
 	}
-
-	for _, m := range results {
-		position := fset.Position(m.Pos())
-		fmt.Printf("%v\t%v\n", position, m.Value)
-	}
-}
-
-func parseFile(fset *token.FileSet, path string, re *regexp.Regexp) ([]*ast.BasicLit, error) {
-	f, err := parser.ParseFile(fset, path, nil, 0)
-	if err != nil {
-		return nil, err
-	}
-	v := strPatternVisitor{re: re}
-	ast.Walk(&v, f)
-	return v.matches, nil
 }
