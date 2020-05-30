@@ -14,8 +14,8 @@ import (
 )
 
 var (
-	strPattern = flag.String("string", ".*", "find string literals containing `pattern`")
-	// commentPattern = flag.String("comment", "", "find comments containing `pattern`")
+	strPattern     = flag.String("string", "", "find string literals containing `pattern`")
+	commentPattern = flag.String("comment", "", "find comments containing `pattern`")
 	// varPattern     = flag.String("var", "", "find variables containing `pattern`")
 	numWorkers = flag.Int("workers", runtime.NumCPU(), "number of search threads")
 )
@@ -35,12 +35,6 @@ func main() {
 		flag.Usage()
 	}
 
-	// compile user-provided pattern
-	re, err := regexp.Compile(*strPattern)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	fset := token.NewFileSet()
 	// parseErrs := make(chan error) dont want to block on error reading
 	parsedFiles := make(chan *ast.File)
@@ -56,19 +50,46 @@ func main() {
 		}
 	}()
 
-	// TODO while excess workers...
-
-	// str scanner workers
 	var wg sync.WaitGroup
-	resC := make(chan []*ast.BasicLit)
-	for i := 0; i < *numWorkers; i++ {
+	resC := make(chan Match)
+
+	// TODO while excess workers...
+	// str scanner worker(+s later)
+	if *strPattern != "" {
+		re, err := regexp.Compile(*strPattern)
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		wg.Add(1)
 		go func() {
 			v := strPatternVisitor{re: re}
 			for f := range parsedFiles {
 				v.matches = nil // realloc slice to reset
 				ast.Walk(&v, f)
-				resC <- v.matches
+				for _, m := range v.matches {
+					resC <- m
+				}
+			}
+			wg.Done()
+		}()
+	}
+
+	// comment scanner worker(+s later)
+	if *commentPattern != "" {
+		re, err := regexp.Compile(*commentPattern)
+		if err != nil {
+			log.Fatal(err)
+		}
+		wg.Add(1)
+		go func() {
+			v := commentPatternVisitor{re: re}
+			for f := range parsedFiles {
+				v.matches = nil // realloc slice to reset
+				ast.Walk(&v, f)
+				for _, m := range v.matches {
+					resC <- m
+				}
 			}
 			wg.Done()
 		}()
@@ -80,9 +101,7 @@ func main() {
 	}()
 
 	for r := range resC {
-		for _, m := range r {
-			position := fset.Position(m.Pos())
-			fmt.Printf("%v\t%v\n", position, m.Value)
-		}
+		position := fset.Position(r.Pos())
+		fmt.Printf("%v\t%v\n", position, r.Text)
 	}
 }
