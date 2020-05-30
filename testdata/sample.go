@@ -3,8 +3,8 @@
 package sample
 
 var (
-	alphaFooDog = "apple"
-	betaBarCat  = "banana"
+	alphaFooDog = "apple"  /* expensive fruit */
+	betaBarCat  = "banana" // it's a banana lol
 )
 
 // SampleAlpha is a sample function that contains the word "alpha" in the

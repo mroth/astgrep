@@ -41,7 +41,7 @@ func main() {
 	go func() {
 		defer close(parsedFiles)
 		for _, fp := range files {
-			f, err := parser.ParseFile(fset, fp, nil, 0)
+			f, err := parser.ParseFile(fset, fp, nil, parser.ParseComments)
 			if err != nil {
 				log.Println(err)
 			} else {
@@ -63,7 +63,7 @@ func main() {
 
 		wg.Add(1)
 		go func() {
-			v := strPatternVisitor{re: re}
+			v := StrPatternVisitor{re: re}
 			for f := range parsedFiles {
 				v.matches = nil // realloc slice to reset
 				ast.Walk(&v, f)
@@ -83,7 +83,7 @@ func main() {
 		}
 		wg.Add(1)
 		go func() {
-			v := commentPatternVisitor{re: re}
+			v := CommentPatternVisitor{re: re}
 			for f := range parsedFiles {
 				v.matches = nil // realloc slice to reset
 				ast.Walk(&v, f)
