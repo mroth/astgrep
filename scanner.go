@@ -69,7 +69,7 @@ func (v *StrPatternVisitor) Visit(n ast.Node) ast.Visitor {
 			for _, loc := range locs {
 				v.matches = append(v.matches, Match{
 					Node:   bl,
-					Text:   s[loc[0]:loc[1]],
+					Text:   s,
 					Base:   loc[0],
 					Length: loc[1] - loc[0],
 				})
@@ -101,7 +101,7 @@ func (v *CommentPatternVisitor) Visit(n ast.Node) ast.Visitor {
 			for _, loc := range locs {
 				v.matches = append(v.matches, Match{
 					Node:   c,
-					Text:   s[loc[0]:loc[1]],
+					Text:   s,
 					Base:   loc[0],
 					Length: loc[1] - loc[0],
 				})
