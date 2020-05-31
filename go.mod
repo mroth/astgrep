@@ -1,3 +1,3 @@
-module github.com/mroth/strgrep
+module github.com/mroth/astgrep
 
 go 1.14

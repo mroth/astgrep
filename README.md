@@ -1,4 +1,4 @@
-# strgrep
+# astgrep
 
 Quick AST-aware tool to run regex pattern searches against only the contents of
 all* string literals within Go source code files. This is useful if you're
