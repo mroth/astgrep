@@ -8,9 +8,10 @@ import (
 
 // Matcher is an ast.Visitor which collects all Match based on a specific
 // matching criteria during its Walk.
-type Matcher interface { // TODO better name?
-	Visit(n ast.Node) ast.Visitor
-	Matches() []Match
+type Matcher interface {
+	Visit(n ast.Node) ast.Visitor // ast.Visitor implementation
+	Matches() []Match             // return existing matches
+	Reset()                       // clear existing matches
 }
 
 type Match struct {
@@ -85,6 +86,10 @@ func (v *StrPatternVisitor) Matches() []Match {
 	return v.matches
 }
 
+func (v *StrPatternVisitor) Reset() {
+	v.matches = nil
+}
+
 // CommentPatternVisitor is a Matcher that finds all matches of a given pattern
 // matching against the Text of ast.Comment nodes.
 type CommentPatternVisitor struct {
@@ -114,4 +119,8 @@ func (v *CommentPatternVisitor) Visit(n ast.Node) ast.Visitor {
 // Matches returns all matches collected by the Matcher
 func (v *CommentPatternVisitor) Matches() []Match {
 	return v.matches
+}
+
+func (v *CommentPatternVisitor) Reset() {
+	v.matches = nil
 }
