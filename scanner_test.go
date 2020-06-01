@@ -34,7 +34,6 @@ func TestStrPatternMatcher(t *testing.T) {
 			re:         regexp.MustCompile("alpha"),
 			numMatches: 0,
 		},
-		// TODO: .*
 	}
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
@@ -77,7 +76,6 @@ func TestCommentPatternMatcher(t *testing.T) {
 			re:         regexp.MustCompile("(?i)alpha"),
 			numMatches: 2,
 		},
-		// TODO: .*
 	}
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
