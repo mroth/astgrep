@@ -11,7 +11,7 @@ import (
 var (
 	strPattern     = flag.String("string", "", "find string literals containing `pattern`")
 	commentPattern = flag.String("comment", "", "find comments containing `pattern`")
-	// varPattern     = flag.String("var", "", "find variables containing `pattern`")
+	varPattern     = flag.String("var", "", "find variables or constants with name containing `pattern`")
 	// numWorkers = flag.Int("workers", runtime.NumCPU(), "number of search threads")
 )
 
@@ -45,6 +45,14 @@ func main() {
 			log.Fatal(err)
 		}
 		matchers = append(matchers, &CommentPatternVisitor{re: re})
+	}
+
+	if *varPattern != "" {
+		re, err := regexp.Compile(*varPattern)
+		if err != nil {
+			log.Fatal(err)
+		}
+		matchers = append(matchers, &VarPatternVisitor{re: re})
 	}
 
 	fset, resC := Search(files, matchers)

@@ -93,3 +93,30 @@ func TestCommentPatternVisitor(t *testing.T) {
 		})
 	}
 }
+
+func TestVarPatternVisitor(t *testing.T) {
+	tests := []struct {
+		path       string
+		re         *regexp.Regexp
+		numMatches int
+	}{
+		{
+			path:       "testdata/sample.go",
+			re:         regexp.MustCompile("alpha"),
+			numMatches: 1, // dont match param names
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.path, func(t *testing.T) {
+			f, _ := parseTestFile(t, tt.path)
+			v := VarPatternVisitor{re: tt.re}
+			ast.Walk(&v, f)
+			if actualMatches := len(v.matches); actualMatches != tt.numMatches {
+				t.Errorf(
+					"%v %v: want %d matches, got %d",
+					tt.path, tt.re, tt.numMatches, actualMatches,
+				)
+			}
+		})
+	}
+}

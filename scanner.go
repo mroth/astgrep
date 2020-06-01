@@ -124,3 +124,39 @@ func (v *CommentPatternVisitor) Matches() []Match {
 func (v *CommentPatternVisitor) Reset() {
 	v.matches = nil
 }
+
+// VarPatternVisitor is a Matcher that finds all matches of a given pattern
+// matching against a variable of constant declaration (the Names of
+// ast.ValueSpec node).
+type VarPatternVisitor struct {
+	re      *regexp.Regexp
+	matches []Match
+}
+
+// Visit implements ast.Visitor, it is thus used during ast.Walk and typically
+// will not be called directly.
+func (v *VarPatternVisitor) Visit(n ast.Node) ast.Visitor {
+	if c, ok := n.(*ast.ValueSpec); ok {
+		s := c.Names[0].Name // TODO: what situation is len(Names) > 1?
+		if locs := v.re.FindAllStringIndex(s, -1); locs != nil {
+			for _, loc := range locs {
+				v.matches = append(v.matches, Match{
+					Node:   c,
+					Text:   s,
+					Base:   loc[0],
+					Length: loc[1] - loc[0],
+				})
+			}
+		}
+	}
+	return v
+}
+
+// Matches returns all matches collected by the Matcher
+func (v *VarPatternVisitor) Matches() []Match {
+	return v.matches
+}
+
+func (v *VarPatternVisitor) Reset() {
+	v.matches = nil
+}
