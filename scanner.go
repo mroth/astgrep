@@ -14,6 +14,7 @@ type Matcher interface {
 	Reset()                       // clear existing matches
 }
 
+// Match represents a positive result found by a Matcher.
 type Match struct {
 	Node   ast.Node // node matched against
 	Text   string   // contents used for match search
@@ -21,10 +22,12 @@ type Match struct {
 	Length int      // length of match text
 }
 
+// Pos returns the position of first character belonging to the Match.
 func (m Match) Pos() token.Pos {
 	return token.Pos(int(m.Node.Pos()) + m.Base)
 }
 
+// End returns the position of first character immediately after the Match.
 func (m Match) End() token.Pos {
 	return token.Pos(int(m.Node.Pos()) + m.Base + m.Length)
 }
@@ -81,11 +84,12 @@ func (v *StrPatternMatcher) Visit(n ast.Node) ast.Visitor {
 	return v
 }
 
-// Matches returns all matches collected by the Matcher
+// Matches returns all matches collected by the Matcher.
 func (v *StrPatternMatcher) Matches() []Match {
 	return v.matches
 }
 
+// Reset the collected Matches to be empty.
 func (v *StrPatternMatcher) Reset() {
 	v.matches = nil
 }
@@ -116,11 +120,12 @@ func (v *CommentPatternMatcher) Visit(n ast.Node) ast.Visitor {
 	return v
 }
 
-// Matches returns all matches collected by the Matcher
+// Matches returns all matches collected by the Matcher.
 func (v *CommentPatternMatcher) Matches() []Match {
 	return v.matches
 }
 
+// Reset the collected Matches to be empty.
 func (v *CommentPatternMatcher) Reset() {
 	v.matches = nil
 }
@@ -152,11 +157,12 @@ func (v *VarPatternMatcher) Visit(n ast.Node) ast.Visitor {
 	return v
 }
 
-// Matches returns all matches collected by the Matcher
+// Matches returns all matches collected by the Matcher.
 func (v *VarPatternMatcher) Matches() []Match {
 	return v.matches
 }
 
+// Reset the collected Matches to be empty.
 func (v *VarPatternMatcher) Reset() {
 	v.matches = nil
 }
