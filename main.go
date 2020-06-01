@@ -36,7 +36,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		matchers = append(matchers, &StrPatternVisitor{re: re})
+		matchers = append(matchers, &StrPatternMatcher{re: re})
 	}
 
 	if *commentPattern != "" {
@@ -44,7 +44,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		matchers = append(matchers, &CommentPatternVisitor{re: re})
+		matchers = append(matchers, &CommentPatternMatcher{re: re})
 	}
 
 	if *varPattern != "" {
@@ -52,7 +52,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		matchers = append(matchers, &VarPatternVisitor{re: re})
+		matchers = append(matchers, &VarPatternMatcher{re: re})
 	}
 
 	fset, resC := Search(files, matchers)

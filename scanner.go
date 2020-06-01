@@ -48,16 +48,16 @@ method. */
 //  }
 // }
 
-// StrPatternVisitor is a Matcher that finds all matches of a given pattern
+// StrPatternMatcher is a Matcher that finds all matches of a given pattern
 // matching against the Value of ast.BasicList nodes of type token.STRING.
-type StrPatternVisitor struct {
+type StrPatternMatcher struct {
 	re      *regexp.Regexp
 	matches []Match
 }
 
 // Visit implements ast.Visitor, it is thus used during ast.Walk and typically
 // will not be called directly.
-func (v *StrPatternVisitor) Visit(n ast.Node) ast.Visitor {
+func (v *StrPatternMatcher) Visit(n ast.Node) ast.Visitor {
 	if _, ok := n.(*ast.ImportSpec); ok {
 		// skip import specs (technically contain string literals, but no one
 		// cares.)
@@ -82,24 +82,24 @@ func (v *StrPatternVisitor) Visit(n ast.Node) ast.Visitor {
 }
 
 // Matches returns all matches collected by the Matcher
-func (v *StrPatternVisitor) Matches() []Match {
+func (v *StrPatternMatcher) Matches() []Match {
 	return v.matches
 }
 
-func (v *StrPatternVisitor) Reset() {
+func (v *StrPatternMatcher) Reset() {
 	v.matches = nil
 }
 
-// CommentPatternVisitor is a Matcher that finds all matches of a given pattern
+// CommentPatternMatcher is a Matcher that finds all matches of a given pattern
 // matching against the Text of ast.Comment nodes.
-type CommentPatternVisitor struct {
+type CommentPatternMatcher struct {
 	re      *regexp.Regexp
 	matches []Match
 }
 
 // Visit implements ast.Visitor, it is thus used during ast.Walk and typically
 // will not be called directly.
-func (v *CommentPatternVisitor) Visit(n ast.Node) ast.Visitor {
+func (v *CommentPatternMatcher) Visit(n ast.Node) ast.Visitor {
 	if c, ok := n.(*ast.Comment); ok {
 		s := c.Text
 		if locs := v.re.FindAllStringIndex(s, -1); locs != nil {
@@ -117,25 +117,25 @@ func (v *CommentPatternVisitor) Visit(n ast.Node) ast.Visitor {
 }
 
 // Matches returns all matches collected by the Matcher
-func (v *CommentPatternVisitor) Matches() []Match {
+func (v *CommentPatternMatcher) Matches() []Match {
 	return v.matches
 }
 
-func (v *CommentPatternVisitor) Reset() {
+func (v *CommentPatternMatcher) Reset() {
 	v.matches = nil
 }
 
-// VarPatternVisitor is a Matcher that finds all matches of a given pattern
+// VarPatternMatcher is a Matcher that finds all matches of a given pattern
 // matching against a variable of constant declaration (the Names of
 // ast.ValueSpec node).
-type VarPatternVisitor struct {
+type VarPatternMatcher struct {
 	re      *regexp.Regexp
 	matches []Match
 }
 
 // Visit implements ast.Visitor, it is thus used during ast.Walk and typically
 // will not be called directly.
-func (v *VarPatternVisitor) Visit(n ast.Node) ast.Visitor {
+func (v *VarPatternMatcher) Visit(n ast.Node) ast.Visitor {
 	if c, ok := n.(*ast.ValueSpec); ok {
 		s := c.Names[0].Name // TODO: what situation is len(Names) > 1?
 		if locs := v.re.FindAllStringIndex(s, -1); locs != nil {
@@ -153,10 +153,10 @@ func (v *VarPatternVisitor) Visit(n ast.Node) ast.Visitor {
 }
 
 // Matches returns all matches collected by the Matcher
-func (v *VarPatternVisitor) Matches() []Match {
+func (v *VarPatternMatcher) Matches() []Match {
 	return v.matches
 }
 
-func (v *VarPatternVisitor) Reset() {
+func (v *VarPatternMatcher) Reset() {
 	v.matches = nil
 }

@@ -18,7 +18,7 @@ func parseTestFile(t *testing.T, path string) (*ast.File, *token.FileSet) {
 	return f, fset
 }
 
-func TestStrPatternVisitor(t *testing.T) {
+func TestStrPatternMatcher(t *testing.T) {
 	tests := []struct {
 		path       string
 		re         *regexp.Regexp
@@ -39,7 +39,7 @@ func TestStrPatternVisitor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
 			f, _ := parseTestFile(t, tt.path)
-			v := StrPatternVisitor{re: tt.re}
+			v := StrPatternMatcher{re: tt.re}
 			ast.Walk(&v, f)
 			if actualMatches := len(v.matches); actualMatches != tt.numMatches {
 				t.Errorf(
@@ -51,7 +51,7 @@ func TestStrPatternVisitor(t *testing.T) {
 	}
 }
 
-func TestCommentPatternVisitor(t *testing.T) {
+func TestCommentPatternMatcher(t *testing.T) {
 	tests := []struct {
 		path       string
 		re         *regexp.Regexp
@@ -82,7 +82,7 @@ func TestCommentPatternVisitor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
 			f, _ := parseTestFile(t, tt.path)
-			v := CommentPatternVisitor{re: tt.re}
+			v := CommentPatternMatcher{re: tt.re}
 			ast.Walk(&v, f)
 			if actualMatches := len(v.matches); actualMatches != tt.numMatches {
 				t.Errorf(
@@ -94,7 +94,7 @@ func TestCommentPatternVisitor(t *testing.T) {
 	}
 }
 
-func TestVarPatternVisitor(t *testing.T) {
+func TestVarPatternMatcher(t *testing.T) {
 	tests := []struct {
 		path       string
 		re         *regexp.Regexp
@@ -109,7 +109,7 @@ func TestVarPatternVisitor(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
 			f, _ := parseTestFile(t, tt.path)
-			v := VarPatternVisitor{re: tt.re}
+			v := VarPatternMatcher{re: tt.re}
 			ast.Walk(&v, f)
 			if actualMatches := len(v.matches); actualMatches != tt.numMatches {
 				t.Errorf(
