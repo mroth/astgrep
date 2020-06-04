@@ -6,9 +6,18 @@ import (
 	"go/token"
 	"log"
 	"sync"
+
+	"github.com/mroth/astgrep"
 )
 
-func Search(files []string, matchers []Matcher) (*token.FileSet, <-chan Match) {
+// search takes a list of files to search concurrently using all Matchers
+// provided.
+//
+// For now, the fileParser segment of this will log directly to os.Stderr if
+// there are any file read errors, in the future if we want to integrate this
+// into the public API of astgrep as a convenience tool we should adjust it to
+// either return an err chan or make an optional io.Writer for error logging.
+func search(files []string, matchers []astgrep.Matcher) (*token.FileSet, <-chan astgrep.Match) {
 	fset := token.NewFileSet()
 
 	parsedFiles := make(chan *ast.File)
@@ -17,14 +26,15 @@ func Search(files []string, matchers []Matcher) (*token.FileSet, <-chan Match) {
 		for _, fp := range files {
 			f, err := parser.ParseFile(fset, fp, nil, parser.ParseComments)
 			if err != nil {
-				log.Println(err) // TODO need to bubble
+				// TODO: no direct logging in the future if exposing this in API
+				log.Println(err)
 			} else {
 				parsedFiles <- f
 			}
 		}
 	}()
 
-	resC := make(chan Match)
+	resC := make(chan astgrep.Match)
 	go func() {
 		defer close(resC)
 		for f := range parsedFiles {

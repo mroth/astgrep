@@ -1,4 +1,4 @@
-package main
+package astgrep
 
 import (
 	"go/ast"
@@ -58,6 +58,11 @@ type StrPatternMatcher struct {
 	matches []Match
 }
 
+// NewStrPatternMatcher returns a new StrPatternMatcher for pattern re.
+func NewStrPatternMatcher(re *regexp.Regexp) *StrPatternMatcher {
+	return &StrPatternMatcher{re: re}
+}
+
 // Visit implements ast.Visitor, it is thus used during ast.Walk and typically
 // will not be called directly.
 func (v *StrPatternMatcher) Visit(n ast.Node) ast.Visitor {
@@ -101,6 +106,11 @@ type CommentPatternMatcher struct {
 	matches []Match
 }
 
+// NewCommentPatternMatcher returns a new CommentPatternMatcher for pattern re.
+func NewCommentPatternMatcher(re *regexp.Regexp) *CommentPatternMatcher {
+	return &CommentPatternMatcher{re: re}
+}
+
 // Visit implements ast.Visitor, it is thus used during ast.Walk and typically
 // will not be called directly.
 func (v *CommentPatternMatcher) Visit(n ast.Node) ast.Visitor {
@@ -136,6 +146,11 @@ func (v *CommentPatternMatcher) Reset() {
 type VarPatternMatcher struct {
 	re      *regexp.Regexp
 	matches []Match
+}
+
+// NewVarPatternMatcher returns a new VarPatternMatcher for pattern re.
+func NewVarPatternMatcher(re *regexp.Regexp) *VarPatternMatcher {
+	return &VarPatternMatcher{re: re}
 }
 
 // Visit implements ast.Visitor, it is thus used during ast.Walk and typically

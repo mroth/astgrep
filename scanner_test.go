@@ -1,4 +1,4 @@
-package main
+package astgrep_test
 
 import (
 	"go/ast"
@@ -6,6 +6,8 @@ import (
 	"go/token"
 	"regexp"
 	"testing"
+
+	"github.com/mroth/astgrep"
 )
 
 func parseTestFile(t *testing.T, path string) (*ast.File, *token.FileSet) {
@@ -38,9 +40,9 @@ func TestStrPatternMatcher(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
 			f, _ := parseTestFile(t, tt.path)
-			v := StrPatternMatcher{re: tt.re}
-			ast.Walk(&v, f)
-			if actualMatches := len(v.matches); actualMatches != tt.numMatches {
+			v := astgrep.NewStrPatternMatcher(tt.re)
+			ast.Walk(v, f)
+			if actualMatches := len(v.Matches()); actualMatches != tt.numMatches {
 				t.Errorf(
 					"%v %v: want %d matches, got %d",
 					tt.path, tt.re, tt.numMatches, actualMatches,
@@ -80,9 +82,9 @@ func TestCommentPatternMatcher(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
 			f, _ := parseTestFile(t, tt.path)
-			v := CommentPatternMatcher{re: tt.re}
-			ast.Walk(&v, f)
-			if actualMatches := len(v.matches); actualMatches != tt.numMatches {
+			v := astgrep.NewCommentPatternMatcher(tt.re)
+			ast.Walk(v, f)
+			if actualMatches := len(v.Matches()); actualMatches != tt.numMatches {
 				t.Errorf(
 					"%v %v: want %d matches, got %d",
 					tt.path, tt.re, tt.numMatches, actualMatches,
@@ -107,9 +109,9 @@ func TestVarPatternMatcher(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
 			f, _ := parseTestFile(t, tt.path)
-			v := VarPatternMatcher{re: tt.re}
-			ast.Walk(&v, f)
-			if actualMatches := len(v.matches); actualMatches != tt.numMatches {
+			v := astgrep.NewVarPatternMatcher(tt.re)
+			ast.Walk(v, f)
+			if actualMatches := len(v.Matches()); actualMatches != tt.numMatches {
 				t.Errorf(
 					"%v %v: want %d matches, got %d",
 					tt.path, tt.re, tt.numMatches, actualMatches,

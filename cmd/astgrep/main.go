@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"regexp"
+
+	"github.com/mroth/astgrep"
 )
 
 var (
@@ -30,13 +32,13 @@ func main() {
 		flag.Usage()
 	}
 
-	var matchers []Matcher
+	var matchers []astgrep.Matcher
 	if *strPattern != "" {
 		re, err := regexp.Compile(*strPattern)
 		if err != nil {
 			log.Fatal(err)
 		}
-		matchers = append(matchers, &StrPatternMatcher{re: re})
+		matchers = append(matchers, astgrep.NewStrPatternMatcher(re))
 	}
 
 	if *commentPattern != "" {
@@ -44,7 +46,7 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		matchers = append(matchers, &CommentPatternMatcher{re: re})
+		matchers = append(matchers, astgrep.NewCommentPatternMatcher(re))
 	}
 
 	if *varPattern != "" {
@@ -52,10 +54,10 @@ func main() {
 		if err != nil {
 			log.Fatal(err)
 		}
-		matchers = append(matchers, &VarPatternMatcher{re: re})
+		matchers = append(matchers, astgrep.NewVarPatternMatcher(re))
 	}
 
-	fset, resC := Search(files, matchers)
+	fset, resC := search(files, matchers)
 	for m := range resC {
 		position := fset.Position(m.Pos())
 		// fmt.Printf("%v\t%v\n", position, m.Text)
