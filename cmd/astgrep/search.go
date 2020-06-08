@@ -18,8 +18,13 @@ import (
 // into the public API of astgrep as a convenience tool we should adjust it to
 // either return an err chan or make an optional io.Writer for error logging.
 func search(files []string, matchers []astgrep.Matcher) (*token.FileSet, <-chan astgrep.Match) {
-	fset := token.NewFileSet()
+	fset, parsedFiles := parseFiles(files)
+	resC := matchFiles(parsedFiles, matchers)
+	return fset, resC
+}
 
+func parseFiles(files []string) (*token.FileSet, <-chan *ast.File) {
+	fset := token.NewFileSet()
 	parsedFiles := make(chan *ast.File)
 	go func() {
 		defer close(parsedFiles)
@@ -33,20 +38,23 @@ func search(files []string, matchers []astgrep.Matcher) (*token.FileSet, <-chan 
 			}
 		}
 	}()
+	return fset, parsedFiles
+}
 
+func matchFiles(pf <-chan *ast.File, ms []astgrep.Matcher) <-chan astgrep.Match {
 	resC := make(chan astgrep.Match)
 	go func() {
 		defer close(resC)
-		for f := range parsedFiles {
+		for f := range pf {
 			// for now, we run multiple matchers concurrently, but locked to a
 			// single file, e.g. all have to finish before we move on to the
 			// next file. This is not necessarily the most efficient way to
-			// handle things, since faster matchers may "waste" time waiting for
-			// the others to finish, but is simpler than dealing with a fanout
-			// queue and our concurrency is already good enough for most
-			// applications.
+			// handle things, as faster matchers may possibly "waste" time
+			// waiting for the others to finish, but reduces complexity vs
+			// dealing with a fanout queue and our concurrency is already
+			// benchmarking good enough for most applications.
 			var wg sync.WaitGroup
-			for _, m := range matchers {
+			for _, m := range ms {
 				m := m
 				wg.Add(1)
 				go func() {
@@ -61,6 +69,5 @@ func search(files []string, matchers []astgrep.Matcher) (*token.FileSet, <-chan 
 			wg.Wait()
 		}
 	}()
-
-	return fset, resC
+	return resC
 }
