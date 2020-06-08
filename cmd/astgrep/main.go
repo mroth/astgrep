@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/gookit/color"
 	"github.com/mroth/astgrep"
 )
 
@@ -14,7 +15,6 @@ var (
 	strPattern     = flag.String("string", "", "find string literals containing `pattern`")
 	commentPattern = flag.String("comment", "", "find comments containing `pattern`")
 	varPattern     = flag.String("var", "", "find variables or constants with name containing `pattern`")
-	// numWorkers = flag.Int("workers", runtime.NumCPU(), "number of search threads")
 )
 
 func usage() {
@@ -60,12 +60,10 @@ func main() {
 	fset, resC := search(files, matchers)
 	for m := range resC {
 		position := fset.Position(m.Pos())
-		// fmt.Printf("%v\t%v\n", position, m.Text)
-		fmt.Printf("%v\t%s%s%s%s%s\n", position,
+		fmt.Printf("%v\t%s%s%s\n",
+			position,
 			m.Text[:m.Base],
-			"\033[31m", //red
-			m.Text[m.Base:m.Base+m.Length],
-			"\033[0m", //reset
+			color.FgRed.Render(m.Text[m.Base:m.Base+m.Length]), // matched portion
 			m.Text[m.Base+m.Length:],
 		)
 	}
